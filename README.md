@@ -16,3 +16,4 @@ Installation
  - E2 Box (tested with DM900 with OE2.5)
  - Loxone Miniserver (tested with version 10)
  
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY.
