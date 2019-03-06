@@ -16,7 +16,6 @@ from Tools.Directories import fileExists
 
 #Imports - standard Python library
 import logging                     #Logging
-import requests
 
 #Imports - own implemented modules
 from miniserverselection import MiniserverSelection
