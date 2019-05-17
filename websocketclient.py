@@ -97,7 +97,7 @@ class WebSocketClient:
             sessionkey = self._generate_session_key() 
 
             #Create WebSocket             
-            self._ws = create_connection("ws://{}/ws/rfc6455".format(self._connection_configuration.ipaddress))
+            self._ws = create_connection("ws://{}:{}/ws/rfc6455".format(self._connection_configuration.ipaddress, self._connection_configuration.port))
 
             #Key exchange
             self.write_websocket_msg_waited(WS_CMD_KEYEXCHANGE.format(sessionkey))            

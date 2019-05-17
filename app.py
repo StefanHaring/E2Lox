@@ -228,7 +228,8 @@ class Structur:
                         if str(sub_control[CONTROL_TYPE]).lower() in [CONTROL_TYPE_SWITCH, CONTROL_TYPE_DIMMER]:  #TODO CONTROL_TYPE_COLORPICKER
                             controls.append(self.__control_factory.get_control(sub_control, control['room'], control['cat']))
                 else:
-                    controls.append(self.__control_factory.get_control(control, control['room'], control['cat']))
+                    if(control.has_key('room')):
+                        controls.append(self.__control_factory.get_control(control, control['room'], control['cat']))
                 
         return controls 
         
@@ -356,7 +357,7 @@ class Control(Component):
         return res
 
         
-    def get_control_entry_components(self, position_value):
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
         yield None
                      
         
@@ -383,20 +384,20 @@ class Cat(Component):
     
         res = [()]
         res.append(MultiContentEntryText(pos = (0, 0), size = (control_list_width, 50), backcolor = int(COLOR_HEX_BLACK,16), backcolor_sel = int(COLOR_HEX_BLACK,16)))
-        res.append(MultiContentEntryText(pos = (50, 13), size = (control_list_width, 50), flags = RT_HALIGN_LEFT, text = self._name, backcolor = int(COLOR_HEX_BLACK,16), backcolor_sel = int(COLOR_HEX_BLACK,16)))
+        res.append(MultiContentEntryText(pos = (50, 13), size = (control_list_width-50, 50), flags = RT_HALIGN_LEFT, text = self._name, backcolor = int(COLOR_HEX_BLACK,16), backcolor_sel = int(COLOR_HEX_BLACK,16)))
         res.append(MultiContentEntryPixmapAlphaBlend(pos = (10, 5), size = (40, 40), png = png))
 
         components.append(res)
 
 
         for control in self._controls:
-            for component in control.get_control_entry_components(control_list_left_pos):
+            for component in control.get_control_entry_components(control_list_left_pos, control_list_width):
                 controllist.append(control)
                 components.append(component)
             
         return components
 
-    def get_control_entry_components(self, position_value):
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
         yield None        
     
 class ControlFactory:        
@@ -451,10 +452,10 @@ class Switch(Control):
            
         return self._get_command(new_status)
         
-    def get_control_entry_components(self, position_value):    
-        res = self._get_control_entry_component_label(position_value)
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):    
+        res = self._get_control_entry_component_label(control_list_left_pos)
         
-        left_position = position_value + 25
+        left_position = control_list_left_pos + 25
         
         if(self._status == CONTROL_SWITCH_STATUS_OFF):
             backgroundcolor = COLOR_HEX_WHITE
@@ -492,11 +493,11 @@ class PushButton(Control):
     def get_ok_command(self):    
         return self._get_command(CONTROL_PUSHBUTTON_PULSE)
         
-    def get_control_entry_components(self, position_value):
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
         png = image_collection.get_pushbutton_image()
     
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value+25, 5), size = (40, 40), png = png))
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos+25, 5), size = (40, 40), png = png))
         yield res 
         
 class Dimmer(Control):
@@ -534,9 +535,9 @@ class Dimmer(Control):
         
         return self._get_command(new_value)
         
-    def get_control_entry_components(self, position_value):
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryProgress(pos = (position_value-15, 5), size = (120, 40), percent = self._value))  
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryProgress(pos = (control_list_left_pos-15, 5), size = (120, 40), percent = self._value))  
         yield res
         
     def update_state(self, uuid_state, value):
@@ -562,21 +563,21 @@ class Jalousie(Control):
     def get_red_command(self):
         return self._get_command(CONTROL_JALOUSIE_DOWN)              
     
-    def get_control_entry_components(self, position_value):
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
         up_png = image_collection.get_up_image()
         down_png = image_collection.get_down_image()
         
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value-20, 5), size = (40, 40), png = up_png))         
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos-20, 5), size = (40, 40), png = up_png))         
 
         top = math.ceil(36 * self._position)
         height = 40
-        left = position_value + 23
+        left = control_list_left_pos + 23
         res.append(MultiContentEntryText(pos = (left, 5), size = (40, height), backcolor = int(COLOR_HEX_BLACK,16), backcolor_sel = int(COLOR_HEX_BLACK,16)))        
         res.append(MultiContentEntryText(pos = (left + 1, 6), size = (38, 38), backcolor = int(COLOR_HEX_WHITE,16), backcolor_sel = int(COLOR_HEX_WHITE,16)))        
         res.append(MultiContentEntryText(pos = (left + 2, 7), size = (36, 36), backcolor = int(COLOR_HEX_BLACK,16), backcolor_sel = int(COLOR_HEX_BLACK,16)))        
         res.append(MultiContentEntryText(pos = (left + 2, 7 + top), size = (36, height - 4 - top), backcolor = int(COLOR_HEX_DARKGREY,16), backcolor_sel = int(COLOR_HEX_DARKGREY,16)))        
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value+70, 5), size = (40, 40), png = down_png))         
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos+70, 5), size = (40, 40), png = down_png))         
 
         yield res
         
@@ -603,13 +604,13 @@ class UpDownDigital(Control):
     def get_red_command(self):
         return self._get_command(CONTROL_UPDOWNDIGITAL_PULSEDOWN) 
             
-    def get_control_entry_components(self, position_value):       
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):       
         up_png = image_collection.get_up_image()
         down_png = image_collection.get_down_image()
         
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value, 5), size = (40, 40), png = up_png))         
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value+50, 5), size = (40, 40), png = down_png))                 
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos, 5), size = (40, 40), png = up_png))         
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos+50, 5), size = (40, 40), png = down_png))                 
         yield res
 
 class LeftRightDigital(Control):
@@ -622,13 +623,13 @@ class LeftRightDigital(Control):
     def get_red_command(self):
         return self._get_command(CONTROL_LEFTRIGHTDIGITAL_LEFT)  #Bug left and right seems to be exchanged
         
-    def get_control_entry_components(self, position_value):       
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):       
         left_png = image_collection.get_left_image()
         right_png = image_collection.get_right_image()
         
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value, 5), size = (40, 40), png = left_png))         
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value+50, 5), size = (40, 40), png = right_png))                 
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos, 5), size = (40, 40), png = left_png))         
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos+50, 5), size = (40, 40), png = right_png))                 
         yield res
         
 class ColorPicker(Control):
@@ -658,11 +659,11 @@ class ColorPicker(Control):
         
         return self._get_command(self._colorlist[self._color_index])
                 
-    def get_control_entry_components(self, position_value): 
-        res = self._get_control_entry_component_label(position_value)
+    def get_control_entry_components(self, control_list_left_pos, control_list_width): 
+        res = self._get_control_entry_component_label(control_list_left_pos)
         
         colorhex = "%02X%02X%02X" % (int(self._color[6:9]), int(self._color[3:6]), int(self._color[0:3]))
-        res.append(MultiContentEntryText(pos = (position_value-15, 5), size = (120, 40), backcolor = int(colorhex,16), backcolor_sel = int(colorhex,16)))        
+        res.append(MultiContentEntryText(pos = (control_list_left_pos-15, 5), size = (120, 40), backcolor = int(colorhex,16), backcolor_sel = int(colorhex,16)))        
         yield res
         
     def update_state(self, uuid_state, value): 
@@ -682,14 +683,14 @@ class InfoOnlyAnalog(Control):
         self._value = None
         self._format = json_control['details']['format'].encode(ENCODING_UTF8)
                               
-    def get_control_entry_components(self, position_value = 0): 
+    def get_control_entry_components(self, control_list_left_pos, control_list_width): 
         if(self._value is not None):
             text = str(self._format) % self._value 
         else:
             text = ''
 
-        res = self._get_control_entry_component_label(position_value)
-        res.append(MultiContentEntryText(pos = (position_value, 13), size = (120, 40), flags = RT_HALIGN_LEFT, text = text))        
+        res = self._get_control_entry_component_label(control_list_left_pos)
+        res.append(MultiContentEntryText(pos = (control_list_left_pos, 13), size = (control_list_width-control_list_left_pos, 40), flags = RT_HALIGN_LEFT, text = text))        
         yield res
         
     def update_state(self, uuid_state, value): 
@@ -718,8 +719,8 @@ class InfoOnlyDigital(Control):
         elif(json_control['details']).has_key('image'):
             self._image = json_control['details']['image']
             
-    def get_control_entry_components(self, position_value): 
-        res = self._get_control_entry_component_label(position_value)
+    def get_control_entry_components(self, control_list_left_pos, control_list_width): 
+        res = self._get_control_entry_component_label(control_list_left_pos)
 
         if(self._text is not None):
             if(self._value == 0.0):
@@ -729,7 +730,7 @@ class InfoOnlyDigital(Control):
                 text = str(self._text['on'])
                 color = self._color['on'][1:] 
             
-            res.append(MultiContentEntryText(pos = (position_value, 13), size = (120, 40), flags = RT_HALIGN_LEFT, text = text, color = int(color,16), color_sel = int(color,16)))        
+            res.append(MultiContentEntryText(pos = (control_list_left_pos, 13), size = (control_list_width-control_list_left_pos, 40), flags = RT_HALIGN_LEFT, text = text, color = int(color,16), color_sel = int(color,16)))        
         
         elif(self._image is not None):
             if(self._value == 0.0):
@@ -739,7 +740,7 @@ class InfoOnlyDigital(Control):
               
             png = LoadPixmap(file_name_path)
         
-            res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value+28, 5), size = (40, 40), png = png))
+            res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos+28, 5), size = (40, 40), png = png))
         yield res
         
     def needs_images(self):
@@ -817,18 +818,18 @@ class Fronius(Control):
                 self._name_cons_curr = option['name'].encode(ENCODING_UTF8) + ' aktuell'
                 self._name_cons_curr_day = option['name'].encode(ENCODING_UTF8) + ' heute'
                                              
-    def _get_control_entry_component(self, position_value, name, value, format):
+    def _get_control_entry_component(self, control_list_left_pos, name, value, format):
         value_str = ''
         
         if(value is not None):
             value_str = str(format) % value 
               
-        res = self._get_control_entry_component_label(position_value, name)
-        res.append(MultiContentEntryText(pos = (position_value, 13), size = (120, 40), flags = RT_HALIGN_LEFT, text = value_str))        
+        res = self._get_control_entry_component_label(control_list_left_pos, name)
+        res.append(MultiContentEntryText(pos = (control_list_left_pos, 13), size = (120, 40), flags = RT_HALIGN_LEFT, text = value_str))        
                
         return res
     
-    def get_control_entry_components(self, position_value):
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):
         #Current
         froniushome_png = image_collection.get_froniushome_image()
         froniusprod_png = image_collection.get_froniusprod_image()
@@ -864,20 +865,20 @@ class Fronius(Control):
             cons_str = '> {} >'.format(cons_val)
             
                     
-        res = self._get_control_entry_component_label(position_value, 'Leistung aktuell')
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value, 5), size = (40, 40), png = froniuscons_png))         
-        res.append(MultiContentEntryText(pos = (position_value + 45, 13), size = (130, 40), flags = RT_HALIGN_LEFT, text = cons_str))       
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value + 175, 5), size = (40, 40), png = froniushome_png))         
-        res.append(MultiContentEntryText(pos = (position_value + 225, 13), size = (130, 40), flags = RT_HALIGN_LEFT, text = prod_str))
-        res.append(MultiContentEntryPixmapAlphaBlend(pos = (position_value + 350, 5), size = (40, 40), png = froniusprod_png))         
+        res = self._get_control_entry_component_label(control_list_left_pos, 'Leistung aktuell')
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos, 5), size = (40, 40), png = froniuscons_png))         
+        res.append(MultiContentEntryText(pos = (control_list_left_pos + 45, 13), size = (130, 40), flags = RT_HALIGN_LEFT, text = cons_str))       
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos + 175, 5), size = (40, 40), png = froniushome_png))         
+        res.append(MultiContentEntryText(pos = (control_list_left_pos + 225, 13), size = (130, 40), flags = RT_HALIGN_LEFT, text = prod_str))
+        res.append(MultiContentEntryPixmapAlphaBlend(pos = (control_list_left_pos + 350, 5), size = (40, 40), png = froniusprod_png))         
         yield res
 
-        yield self._get_control_entry_component(position_value, self._name_cons_curr, self._cons_curr, self._format_cons_curr)        
-        yield self._get_control_entry_component(position_value, self._name_prod_curr_day, self._prod_curr_day, self._format_prod_curr)
-        yield self._get_control_entry_component(position_value, self._name_prod_curr_month, self._prod_curr_month, self._format_prod_curr)
-        yield self._get_control_entry_component(position_value, self._name_prod_curr_year, self._prod_curr_year, self._format_prod_curr)
-        yield self._get_control_entry_component(position_value, self._name_prod_total, self._prod_total, self._format_prod_curr)        
-        yield self._get_control_entry_component(position_value, self._name_cons_curr_day, self._cons_curr_day, self._format_cons_curr) 
+        yield self._get_control_entry_component(control_list_left_pos, self._name_cons_curr, self._cons_curr, self._format_cons_curr)        
+        yield self._get_control_entry_component(control_list_left_pos, self._name_prod_curr_day, self._prod_curr_day, self._format_prod_curr)
+        yield self._get_control_entry_component(control_list_left_pos, self._name_prod_curr_month, self._prod_curr_month, self._format_prod_curr)
+        yield self._get_control_entry_component(control_list_left_pos, self._name_prod_curr_year, self._prod_curr_year, self._format_prod_curr)
+        yield self._get_control_entry_component(control_list_left_pos, self._name_prod_total, self._prod_total, self._format_prod_curr)        
+        yield self._get_control_entry_component(control_list_left_pos, self._name_cons_curr_day, self._cons_curr_day, self._format_cons_curr) 
                 
     def update_state(self, uuid_state, value): 
         if(uuid_state == self._uuid_prod_curr):
@@ -940,8 +941,8 @@ class Intercom(Control):
         self._timer_active = False
         self._logger = logging.getLogger('Intercom')
         
-    def get_control_entry_components(self, position_value):   
-        res = self._get_control_entry_component_label(position_value)
+    def get_control_entry_components(self, control_list_left_pos, control_list_width):   
+        res = self._get_control_entry_component_label(control_list_left_pos)
         yield res
         
     def has_secured_details(self):
@@ -1112,8 +1113,8 @@ class RoomSelection(Screen):
     global control_list_width
     control_list_width = (scren_size_width - 2 * list_boarder) / 3 * 2
     control_list_height = room_list_position_height
-    global control_list_position_value
-    control_list_position_value = control_list_width / 2      
+    global control_list_control_list_left_pos
+    control_list_control_list_left_pos = control_list_width / 2      
     
     caption_panel_separator_position_x = room_list_position_x + room_list_position_width 
     caption_panel_separator_width = room_list_separator_width
@@ -1149,6 +1150,7 @@ class RoomSelection(Screen):
                                     control_list_position_x, control_list_position_y, control_list_width, control_list_height,)
               
     def __init__(self, session, path, config_filename):
+        self._ready = False
         #Constants
         self.__ROOM_LIST    = 'room_list'
         self.__CONTROL_LIST = 'control_list'
@@ -1237,7 +1239,9 @@ class RoomSelection(Screen):
             self._webSocketClient.enable_status_update()
             self._timer.start(STATUS_UPDATE_INTERVAL, False) 
         except WebSocketClientException:
-            self._communication_error()           
+            self._communication_error()
+
+        self._ready = True
                 
     def _communication_error(self):
         self.__close()
@@ -1250,52 +1254,82 @@ class RoomSelection(Screen):
             self._communication_error()  
        
     def __up(self):        
+        if self._ready == False:
+            return
+            
         self[self.selectedList].up()
                
     def __down(self):     	
+        if self._ready == False:
+            return
+
         self[self.selectedList].down()
         
     def __pageup(self):        
+        if self._ready == False:
+            return
+    
         self[self.selectedList].pageUp()
                
     def __pagedown(self):     	
-        self[self.selectedList].pageDown()
+        if self._ready == False:
+            return
+
+            self[self.selectedList].pageDown()
         
     def _get_selected_control(self):
         control_index = self[self.__CONTROL_LIST].getSelectionIndex()
         return self.controllist[control_index]
         
     def __right(self):
+        if self._ready == False:
+            return
+        
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_right_command()
             if(command is not None):
                 self.__miniserver.send_comand(command)
                                 
     def __left(self):
+        if self._ready == False:
+            return
+
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_left_command()
             if(command is not None):
                 self.__miniserver.send_comand(command)
                                 
     def __green(self):
+        if self._ready == False:
+            return
+
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_green_command()
             if(command is not None):
                 self.__miniserver.send_comand(command)
                                
     def __red(self):
+        if self._ready == False:
+            return
+
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_red_command()
             if(command is not None):
                 self.__miniserver.send_comand(command)
 
     def __yellow(self):
+        if self._ready == False:
+            return
+
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_yellow_command()
             if(command is not None):
                 self.__miniserver.send_comand(command)
                 
     def __blue(self):
+        if self._ready == False:
+            return
+
         if self.selectedList == self.__CONTROL_LIST:
             command = self._get_selected_control().get_blue_command()
             if(command is not None):
@@ -1312,6 +1346,9 @@ class RoomSelection(Screen):
         self.selectedList = self.__ROOM_LIST
                 
     def __ok(self):
+        if self._ready == False:
+            return
+        
         if self.selectedList == self.__ROOM_LIST:
             self.__set_control_list_enabled()
         else:
@@ -1361,7 +1398,7 @@ class RoomSelection(Screen):
         self.controllist = []
         
         for cat in self.__miniserver.rooms[room_index]._cats:          
-            for comp in cat.get_components(control_list_position_value, control_list_width, self.controllist):
+            for comp in cat.get_components(control_list_control_list_left_pos, control_list_width, self.controllist):
                 self.__control_list.append(comp)
                         
         self[self.__CONTROL_LIST].l.setList(self.__control_list)     
