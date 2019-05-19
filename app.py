@@ -685,7 +685,13 @@ class InfoOnlyAnalog(Control):
                               
     def get_control_entry_components(self, control_list_left_pos, control_list_width): 
         if(self._value is not None):
-            text = str(self._format) % self._value 
+            if(self._format == '<v.x>'):
+                if(self._value == 0):
+                    text = 'Aus'
+                else:
+                    text = 'Ein'
+            else:   
+                text = str(self._format) % self._value 
         else:
             text = ''
 
