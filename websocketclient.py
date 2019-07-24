@@ -20,8 +20,8 @@ from websocket import create_connection
 #Constants
 CMD_GETPUBLICKEY = 'jdev/sys/getPublicKey'
 
-WS_BIN_HDR_STRUCT              = 'c c 2c I'
-WS_BIN_EV_DATA_STRUCT          = 'l H H 8s d'
+WS_BIN_HDR_STRUCT              = '<c c 2c I'
+WS_BIN_EV_DATA_STRUCT          = '<l H H 8s d'
 
 WS_BIN_EV_DATA_LENGTH = 24
 
